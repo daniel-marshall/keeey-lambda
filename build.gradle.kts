@@ -49,6 +49,9 @@ abstract class DockerBuildTask
         val registry_uri = "${account_id.get()}.dkr.ecr.${region.get()}.amazonaws.com"
         val registry = "${registry_uri}/${repo_name.get()}"
         execOperations.exec {
+            commandLine("ls", "-la")
+        }
+        execOperations.exec {
             commandLine("docker", "build", "--tag", registry, ".")
         }
         execOperations.exec {
