@@ -1,5 +1,8 @@
+import java.io.ByteArrayOutputStream
+import java.io.PipedInputStream
+import java.io.PipedOutputStream
+
 plugins {
-    // Apply the application plugin to add support for building a CLI application in Java.
     java
 }
 
@@ -54,14 +57,26 @@ abstract class DockerBuildTask
         execOperations.exec {
             commandLine("docker", "build", "--tag", registry, ".")
         }
+
+        var stdout = ByteArrayOutputStream()
         execOperations.exec {
+            standardOutput = stdout
             commandLine(
                 "aws",
                 "ecr",
                 "get-login-password",
                 "--region",
-                region.get(),
-                "|",
+                region.get()
+            )
+        }
+
+        val stdin = PipedInputStream()
+        val pipedout = PipedOutputStream(stdin)
+        stdout.writeTo(pipedout)
+
+        execOperations.exec {
+            standardInput = stdin
+            commandLine(
                 "docker",
                 "login",
                 "--username",
