@@ -81,6 +81,7 @@ abstract class DockerBuildTask
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
+    mustRunAfter(tasks.jar)
     account_id.set(project.property("account_id") as String)
     region.set(project.property("region") as String)
     repo_name.set(project.property("repo_name") as String)
