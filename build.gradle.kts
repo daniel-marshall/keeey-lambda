@@ -58,6 +58,8 @@ abstract class DockerBuildTask
             commandLine("docker", "build", "--tag", registry, ".")
         }
 
+        logger.info("Build Complete")
+
         var stdout = ByteArrayOutputStream()
         execOperations.exec {
             standardOutput = stdout
@@ -72,7 +74,6 @@ abstract class DockerBuildTask
 
         val stdin = PipedInputStream()
         val pipedout = PipedOutputStream(stdin)
-        stdout.writeTo(pipedout)
 
         execOperations.exec {
             standardInput = stdin
@@ -86,13 +87,19 @@ abstract class DockerBuildTask
             )
         }
 
+        stdout.writeTo(pipedout)
+
+        logger.info("Login Complete")
+
         execOperations.exec {
             commandLine(
                 "docker",
                 "push",
-                "registry"
+                registry
             )
         }
+
+        logger.info("Push Complete")
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
