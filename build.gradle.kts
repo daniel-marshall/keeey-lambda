@@ -61,16 +61,7 @@ abstract class DockerBuildTask
             commandLine("docker", "build", "--tag", tag, ".")
         }
 
-        var shaDigest = ByteArrayOutputStream().use { stream ->
-            execOperations.exec {
-                standardOutput = stream
-                commandLine("docker", "inspect", "--format=\"{{index .RepoDigests 0}}\"", tag)
-            }
-
-            stream.toString();
-        }
-
-        logger.lifecycle("Build Complete: ${shaDigest}")
+        logger.lifecycle("Build Complete")
 
         execOperations.exec {
             commandLine(
@@ -94,6 +85,16 @@ abstract class DockerBuildTask
 
         logger.lifecycle("Push Complete")
 
+        var shaDigest = ByteArrayOutputStream().use { stream ->
+            execOperations.exec {
+                standardOutput = stream
+                commandLine("docker", "inspect", "--format=\"{{index .RepoDigests 0}}\"", tag)
+            }
+
+            stream.toString();
+        }
+
+        logger.lifecycle("Writing sha ${shaDigest}")
         digest_file.get().asFile.writeText(shaDigest)
     }
 }
