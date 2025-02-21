@@ -45,8 +45,12 @@ abstract class DockerBuildTask
     @get:Input
     abstract val repo_name: Property<String>
 
-    @OutputFile
-    val digest_file: File = file("${layout.buildDirectory}/digest")
+    @get:OutputFile
+    abstract val digest_file: RegularFileProperty
+
+    init {
+        digest_file.convention(project.layout.buildDirectory.file("digest"))
+    }
 
     @TaskAction
     fun buildAndPublish() {
