@@ -1,6 +1,4 @@
 import java.io.ByteArrayOutputStream
-import java.io.PipedInputStream
-import java.io.PipedOutputStream
 
 plugins {
     java
@@ -50,13 +48,22 @@ abstract class DockerBuildTask
     @TaskAction
     fun buildAndPublish() {
         val registry_uri = "${account_id.get()}.dkr.ecr.${region.get()}.amazonaws.com"
-        val registry = "${registry_uri}/${repo_name.get()}"
+        val tag = "${registry_uri}/${repo_name.get()}:latest"
 
         execOperations.exec {
-            commandLine("docker", "build", "--tag", registry, ".")
+            commandLine("docker", "build", "--tag", tag, ".")
         }
 
-        logger.lifecycle("Build Complete")
+        var shaDigest = ByteArrayOutputStream().use { stream ->
+            execOperations.exec {
+                standardOutput = stream
+                commandLine("docker", "inspect", "--format='{{index .RepoDigests 0}}'", tag)
+            }
+
+            stream.toString();
+        }
+
+        logger.lifecycle("Build Complete: ${shaDigest}")
 
         execOperations.exec {
             commandLine(
@@ -74,11 +81,13 @@ abstract class DockerBuildTask
             commandLine(
                 "docker",
                 "push",
-                registry
+                tag
             )
         }
 
         logger.lifecycle("Push Complete")
+
+        file("${layout.buildDirectory}/digest").writeText(shaDigest)
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
