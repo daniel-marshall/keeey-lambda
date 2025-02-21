@@ -60,7 +60,7 @@ abstract class DockerBuildTask
 
         logger.info("Build Complete")
 
-        var stdout = ByteArrayOutputStream()
+        val stdout = ByteArrayOutputStream()
         execOperations.exec {
             standardOutput = stdout
             commandLine(
@@ -70,12 +70,11 @@ abstract class DockerBuildTask
                 "--region",
                 region.get()
             )
-        }
 
-        val stdin = PipedInputStream()
-        val pipedout = PipedOutputStream(stdin)
+            val stdin = PipedInputStream()
+            val pipedout = PipedOutputStream(stdin)
+            stdout.writeTo(pipedout)
 
-        execOperations.exec {
             standardInput = stdin
             commandLine(
                 "docker",
@@ -86,8 +85,6 @@ abstract class DockerBuildTask
                 registry_uri
             )
         }
-
-        stdout.writeTo(pipedout)
 
         logger.info("Login Complete")
 
