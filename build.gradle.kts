@@ -45,6 +45,9 @@ abstract class DockerBuildTask
     @get:Input
     abstract val repo_name: Property<String>
 
+    @OutputFile
+    val digest_file: File = file("${layout.buildDirectory}/digest")
+
     @TaskAction
     fun buildAndPublish() {
         val registry_uri = "${account_id.get()}.dkr.ecr.${region.get()}.amazonaws.com"
@@ -87,7 +90,7 @@ abstract class DockerBuildTask
 
         logger.lifecycle("Push Complete")
 
-        file("${layout.buildDirectory}/digest").writeText(shaDigest)
+        digest_file.writeText(shaDigest)
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
