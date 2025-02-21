@@ -64,7 +64,7 @@ abstract class DockerBuildTask
         var shaDigest = ByteArrayOutputStream().use { stream ->
             execOperations.exec {
                 standardOutput = stream
-                commandLine("docker", "inspect", "--format='{{index .RepoDigests 0}}'", tag)
+                commandLine("docker", "inspect", "--format=\"{{index .RepoDigests 0}}\"", tag)
             }
 
             stream.toString();
