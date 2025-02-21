@@ -51,42 +51,24 @@ abstract class DockerBuildTask
     fun buildAndPublish() {
         val registry_uri = "${account_id.get()}.dkr.ecr.${region.get()}.amazonaws.com"
         val registry = "${registry_uri}/${repo_name.get()}"
-        execOperations.exec {
-            commandLine("ls", "-la")
-        }
+
         execOperations.exec {
             commandLine("docker", "build", "--tag", registry, ".")
         }
 
-        logger.info("Build Complete")
+        logger.lifecycle("Build Complete")
 
-        val stdout = ByteArrayOutputStream()
         execOperations.exec {
-            standardOutput = stdout
             commandLine(
-                "aws",
-                "ecr",
-                "get-login-password",
-                "--region",
-                region.get()
-            )
-
-            val stdin = PipedInputStream()
-            val pipedout = PipedOutputStream(stdin)
-            stdout.writeTo(pipedout)
-
-            standardInput = stdin
-            commandLine(
-                "docker",
-                "login",
-                "--username",
-                "AWS",
-                "--password-stdin",
-                registry_uri
+                "bash",
+                "-c",
+                "aws ecr get-login-password --region ${region.get()}"
+                    + " | "
+                    + "docker login --username AWS --password-stdin ${registry_uri}"
             )
         }
 
-        logger.info("Login Complete")
+        logger.lifecycle("Login Complete")
 
         execOperations.exec {
             commandLine(
@@ -96,7 +78,7 @@ abstract class DockerBuildTask
             )
         }
 
-        logger.info("Push Complete")
+        logger.lifecycle("Push Complete")
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
