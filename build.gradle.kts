@@ -1,4 +1,6 @@
 import java.io.ByteArrayOutputStream
+import kotlinx.serialization.Serializable
+import kotlinx.serialization.json.Json
 
 plugins {
     java
@@ -7,6 +9,16 @@ plugins {
 repositories {
     // Use Maven Central for resolving dependencies.
     mavenCentral()
+}
+
+buildscript {
+    repositories {
+        mavenCentral()
+    }
+
+    dependencies {
+        classpath("org.jetbrains.kotlinx", "kotlinx-serialization-json", "1.2.2")
+    }
 }
 
 dependencies {
@@ -85,17 +97,23 @@ abstract class DockerBuildTask
 
         logger.lifecycle("Push Complete")
 
-        var shaDigest = ByteArrayOutputStream().use { stream ->
+
+        @Serializable
+        data class Config(val digest: String)
+
+        @Serializable
+        data class Manifest(val config: Config)
+
+        var manifest = ByteArrayOutputStream().use { stream ->
             execOperations.exec {
                 standardOutput = stream
-                commandLine("docker", "inspect", "--format=\"{{json .RepoDigests}}\"", tag)
+                commandLine("docker", "manifest", "inspect", tag)
             }
-
-            stream.toString();
+            Json.decodeFromString<Manifest>(stream.toString())
         }
 
-        logger.lifecycle("Writing sha ${shaDigest}")
-        digest_file.get().asFile.writeText(shaDigest)
+        logger.lifecycle("Writing sha from manifest: '${manifest}'")
+        digest_file.get().asFile.writeText(manifest.config.digest)
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
