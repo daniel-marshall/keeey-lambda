@@ -94,7 +94,7 @@ abstract class DockerBuildTask
 
         logger.lifecycle("Push Complete")
 
-        digest_file.writeText(shaDigest)
+        digest_file.get().asFile.writeText(shaDigest)
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
