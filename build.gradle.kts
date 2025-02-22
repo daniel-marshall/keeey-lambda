@@ -1,4 +1,5 @@
 import java.io.ByteArrayOutputStream
+import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 
@@ -98,8 +99,10 @@ abstract class DockerBuildTask
         logger.lifecycle("Push Complete")
 
 
+        @Serializable
         data class Config(val digest: String)
 
+        @Serializable
         data class Manifest(val config: Config)
 
         var manifest = ByteArrayOutputStream().use { stream ->
