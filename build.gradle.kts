@@ -107,7 +107,7 @@ abstract class DockerBuildTask
             val json = Json.decodeFromString<JsonObject>(stream.toString())
 
             logger.lifecycle("Manifest Json: '$json'")
-            json.getValue("Digest")
+            json.getValue("digest")
                 .jsonPrimitive
                 .content
         }
