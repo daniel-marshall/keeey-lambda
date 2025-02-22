@@ -117,6 +117,10 @@ abstract class DockerBuildTask
 
         logger.lifecycle("Writing sha: '${shaDigest}'")
         digestFile.get().asFile.writeText(shaDigest)
+
+        execOperations.exec {
+            commandLine("export", "ECR_DIGEST=${shaDigest}")
+        }
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
