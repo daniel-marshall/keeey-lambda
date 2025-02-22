@@ -2,6 +2,7 @@ import java.io.ByteArrayOutputStream
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
 import kotlinx.serialization.json.jsonPrimitive
 
 plugins {
@@ -107,7 +108,9 @@ abstract class DockerBuildTask
             val json = Json.decodeFromString<JsonObject>(stream.toString())
 
             logger.lifecycle("Manifest Json: '$json'")
-            json.getValue("digest")
+            json.getValue("Descriptor")
+                .jsonObject
+                .getValue("digest")
                 .jsonPrimitive
                 .content
         }
