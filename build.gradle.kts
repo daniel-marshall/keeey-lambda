@@ -103,12 +103,10 @@ abstract class DockerBuildTask
         val shaDigest = ByteArrayOutputStream().use { stream ->
             execOperations.exec {
                 standardOutput = stream
-                commandLine("docker", "manifest", "inspect", tag)
+                commandLine("docker", "manifest", "inspect", "--verbose", tag)
             }
             Json.decodeFromString<JsonObject>(stream.toString())
-                .getValue("config")
-                .jsonObject
-                .getValue("digest")
+                .getValue("Digest")
                 .jsonPrimitive
                 .content
         }
