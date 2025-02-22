@@ -1,7 +1,9 @@
 import java.io.ByteArrayOutputStream
-import kotlinx.serialization.Serializable
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 plugins {
     java
@@ -43,32 +45,32 @@ tasks.jar {
         attributes["Main-Class"] = "com.marshallArts.keeey.LambdaMain"
     }
     duplicatesStrategy = DuplicatesStrategy.EXCLUDE
-    from(configurations.runtimeClasspath.get().map({ if (it.isDirectory) it else zipTree(it) }))
+    from(configurations.runtimeClasspath.get().map { if (it.isDirectory) it else zipTree(it) })
 }
 
 abstract class DockerBuildTask
 @Inject constructor(private var execOperations: ExecOperations) : DefaultTask() {
 
     @get:Input
-    abstract val account_id: Property<String>
+    abstract val accountId: Property<String>
 
     @get:Input
     abstract val region: Property<String>
 
     @get:Input
-    abstract val repo_name: Property<String>
+    abstract val repoName: Property<String>
 
     @get:OutputFile
-    abstract val digest_file: RegularFileProperty
+    abstract val digestFile: RegularFileProperty
 
     init {
-        digest_file.convention(project.layout.buildDirectory.file("digest"))
+        digestFile.convention(project.layout.buildDirectory.file("digest"))
     }
 
     @TaskAction
     fun buildAndPublish() {
-        val registry_uri = "${account_id.get()}.dkr.ecr.${region.get()}.amazonaws.com"
-        val tag = "${registry_uri}/${repo_name.get()}:latest"
+        val registryUri = "${accountId.get()}.dkr.ecr.${region.get()}.amazonaws.com"
+        val tag = "${registryUri}/${repoName.get()}:latest"
 
         execOperations.exec {
             commandLine("docker", "build", "--tag", tag, ".")
@@ -82,7 +84,7 @@ abstract class DockerBuildTask
                 "-c",
                 "aws ecr get-login-password --region ${region.get()}"
                     + " | "
-                    + "docker login --username AWS --password-stdin ${registry_uri}"
+                    + "docker login --username AWS --password-stdin $registryUri"
             )
         }
 
@@ -98,28 +100,26 @@ abstract class DockerBuildTask
 
         logger.lifecycle("Push Complete")
 
-
-        @Serializable
-        data class Config(val digest: String)
-
-        @Serializable
-        data class Manifest(val config: Config)
-
-        var manifest = ByteArrayOutputStream().use { stream ->
+        val shaDigest = ByteArrayOutputStream().use { stream ->
             execOperations.exec {
                 standardOutput = stream
                 commandLine("docker", "manifest", "inspect", tag)
             }
-            Json.decodeFromString<Manifest>(stream.toString())
+            Json.decodeFromString<JsonObject>(stream.toString())
+                .getValue("config")
+                .jsonObject
+                .getValue("digest")
+                .jsonPrimitive
+                .content
         }
 
-        logger.lifecycle("Writing sha from manifest: '${manifest}'")
-        digest_file.get().asFile.writeText(manifest.config.digest)
+        logger.lifecycle("Writing sha: '${shaDigest}'")
+        digestFile.get().asFile.writeText(shaDigest)
     }
 }
 tasks.register("docker-publish", DockerBuildTask::class) {
     dependsOn(tasks.build)
-    account_id.set(project.property("account_id") as String)
+    accountId.set(project.property("account_id") as String)
     region.set(project.property("region") as String)
-    repo_name.set(project.property("repo_name") as String)
+    repoName.set(project.property("repo_name") as String)
 }
