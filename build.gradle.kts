@@ -1,4 +1,5 @@
 import java.io.ByteArrayOutputStream
+import kotlinx.serialization.ExperimentalSerializationApi
 import kotlinx.serialization.decodeFromString
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.JsonObject
@@ -67,10 +68,11 @@ abstract class DockerBuildTask
         digestFile.convention(project.layout.buildDirectory.file("digest"))
     }
 
+    @OptIn(ExperimentalSerializationApi::class)
     @TaskAction
     fun buildAndPublish() {
-        val registryUri = "${accountId.get()}.dkr.ecr.${region.get()}.amazonaws.com"
-        val tag = "${registryUri}/${repoName.get()}:latest"
+        val registryUri = "${accountId.get()}.dkr.ecr.${region.get()}.amazonaws.com/${repoName.get()}"
+        val tag = "${registryUri}:latest"
 
         execOperations.exec {
             commandLine("docker", "build", "--tag", tag, ".")
@@ -108,7 +110,7 @@ abstract class DockerBuildTask
             val json = Json.decodeFromString<JsonObject>(stream.toString())
 
             logger.lifecycle("Manifest Json: '$json'")
-            json.getValue("Descriptor")
+            registryUri + "@" + json.getValue("Descriptor")
                 .jsonObject
                 .getValue("digest")
                 .jsonPrimitive
