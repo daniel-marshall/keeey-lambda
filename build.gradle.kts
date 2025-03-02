@@ -110,11 +110,12 @@ abstract class DockerBuildTask
             val json = Json.decodeFromString<JsonObject>(stream.toString())
 
             logger.lifecycle("Manifest Json: '$json'")
-            registryUri + "@" + json.getValue("Descriptor")
+            json.getValue("Descriptor")
                 .jsonObject
                 .getValue("digest")
                 .jsonPrimitive
                 .content
+                .removePrefix("sha256:")
         }
 
         logger.lifecycle("Writing sha: '${shaDigest}'")
