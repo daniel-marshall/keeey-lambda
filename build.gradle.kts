@@ -33,6 +33,9 @@ dependencies {
     implementation(libs.guava)
     implementation("com.amazonaws", "aws-lambda-java-runtime-interface-client", "2.3.2")
     implementation("com.amazonaws", "aws-lambda-java-events", "3.15.0")
+    implementation("com.fasterxml.jackson.core", "jackson-databind", "2.18.2")
+    compileOnly("org.projectlombok", "lombok", "1.18.36")
+    annotationProcessor("org.projectlombok", "lombok", "1.18.36")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
