@@ -32,6 +32,7 @@ dependencies {
     // This dependency is used by the application.
     implementation(libs.guava)
     implementation("com.amazonaws", "aws-lambda-java-runtime-interface-client", "2.3.2")
+    implementation("com.amazonaws", "aws-lambda-java-events", "3.15.0")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
