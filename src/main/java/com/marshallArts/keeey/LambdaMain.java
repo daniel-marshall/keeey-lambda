@@ -1,11 +1,18 @@
 package com.marshallArts.keeey;
 
+import java.util.Map;
+
 import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.api.client.AWSLambda;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
+import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import lombok.SneakyThrows;
+import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 public class LambdaMain {
 
@@ -15,8 +22,11 @@ public class LambdaMain {
 
     public static final class Handler implements RequestHandler<APIGatewayV2HTTPEvent, String> {
         private static final ObjectMapper OBJECT_MAPPER = new ObjectMapper();
-        public record PutEvent(String name, Integer age) { }
-        public record GetEvent(String name, Integer age) { }
+        private static final DynamoDbClient DYNAMO_CLIENT = DynamoDbClient.builder()
+                .build();
+        private static final String DYNAMO_TABLE_NAME = System.getenv("DYNAMO_TABLE_NAME");
+        public record PutEvent(String key, JsonNode value) { }
+        public record GetEvent(String key) { }
 
         @Override
         @SneakyThrows
@@ -37,8 +47,18 @@ public class LambdaMain {
             };
         }
 
-        public String handlePutRequest(final PutEvent put, final APIGatewayV2HTTPEvent event, final Context context) {
-            return "ABC";
+        public String handlePutRequest(final PutEvent putEvent, final APIGatewayV2HTTPEvent event, final Context context) {
+            DYNAMO_CLIENT.putItem(PutItemRequest.builder()
+                    .tableName(DYNAMO_TABLE_NAME)
+                    .item(Map.of(
+                            "key", AttributeValue.builder().s(putEvent.key()).build(),
+                            "value", AttributeValue.builder()
+                                    .m(EnhancedDocument.fromJson(putEvent.value().toString()).toMap())
+                                    .build()
+                    ))
+                    .build()
+            );
+            return "Success";
         }
 
         private String handleGetRequest(final GetEvent getEvent, final APIGatewayV2HTTPEvent event, final Context context) {

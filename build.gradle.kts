@@ -33,6 +33,8 @@ dependencies {
     implementation(libs.guava)
     implementation("com.amazonaws", "aws-lambda-java-runtime-interface-client", "2.3.2")
     implementation("com.amazonaws", "aws-lambda-java-events", "3.15.0")
+    implementation("software.amazon.awssdk", "dynamodb", "2.30.36")
+    implementation("software.amazon.awssdk", "dynamodb-enhanced", "2.20.33")
     implementation("com.fasterxml.jackson.core", "jackson-databind", "2.18.2")
     compileOnly("org.projectlombok", "lombok", "1.18.36")
     annotationProcessor("org.projectlombok", "lombok", "1.18.36")
