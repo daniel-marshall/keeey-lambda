@@ -25,7 +25,7 @@ public class LambdaMain {
         private static final DynamoDbClient DYNAMO_CLIENT = DynamoDbClient.builder()
                 .build();
         private static final String DYNAMO_TABLE_NAME = System.getenv("DYNAMO_TABLE_NAME");
-        public record PutEvent(String key, JsonNode value) { }
+        public record PutEvent(String key, String value) { }
         public record GetEvent(String key) { }
 
         @Override
@@ -53,7 +53,7 @@ public class LambdaMain {
                     .item(Map.of(
                             "key", AttributeValue.builder().s(putEvent.key()).build(),
                             "value", AttributeValue.builder()
-                                    .m(EnhancedDocument.fromJson(putEvent.value().toString()).toMap())
+                                    .m(EnhancedDocument.fromJson(putEvent.value()).toMap())
                                     .build()
                     ))
                     .build()
