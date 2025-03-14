@@ -35,9 +35,13 @@ dependencies {
     implementation("com.amazonaws", "aws-lambda-java-events", "3.15.0")
     implementation("software.amazon.awssdk", "dynamodb", "2.30.36")
     implementation("software.amazon.awssdk", "dynamodb-enhanced", "2.20.33")
+
     implementation("com.fasterxml.jackson.core", "jackson-databind", "2.18.2")
     compileOnly("org.projectlombok", "lombok", "1.18.36")
     annotationProcessor("org.projectlombok", "lombok", "1.18.36")
+
+    implementation("com.google.dagger", "dagger", "2.55")
+    annotationProcessor("com.google.dagger", "dagger-compiler", "2.55")
 }
 
 // Apply a specific Java toolchain to ease working on different environments.
