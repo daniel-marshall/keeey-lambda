@@ -20,7 +20,7 @@ import com.marshallArts.keeey.LambdaMain.HandlerDelegate;
 import lombok.AllArgsConstructor;
 import lombok.SneakyThrows;
 
-@AllArgsConstructor(onConstructor = @__(@Inject))
+@AllArgsConstructor
 public final class LambdaActual implements RequestHandler<APIGatewayV2HTTPEvent, String> {
     private final ObjectMapper objectMapper;
     private final HandlerDelegate<PutEvent> putDelegate;
@@ -48,7 +48,7 @@ public final class LambdaActual implements RequestHandler<APIGatewayV2HTTPEvent,
         };
     }
 
-    @AllArgsConstructor(onConstructor = @__(@Inject))
+    @AllArgsConstructor
     public static final class PutHandler implements HandlerDelegate<PutEvent> {
 
         private final DynamoDbClient dynamoClient;
@@ -77,10 +77,8 @@ public final class LambdaActual implements RequestHandler<APIGatewayV2HTTPEvent,
         }
     }
 
-    @AllArgsConstructor(onConstructor = @__(@Inject))
+    @AllArgsConstructor
     public static final class GetHandler implements HandlerDelegate<GetEvent> {
-
-        private final ObjectMapper objectMapper;
 
         private final DynamoDbClient dynamoClient;
 
@@ -101,14 +99,7 @@ public final class LambdaActual implements RequestHandler<APIGatewayV2HTTPEvent,
                     .build()
             );
 
-            context.getLogger().log(String.valueOf(item.item()));
-
-            final ObjectNode jsonNode = objectMapper.readValue(
-                    EnhancedDocument.fromAttributeValueMap(item.item()).toJson(),
-                    ObjectNode.class
-            );
-
-            return objectMapper.writeValueAsString(jsonNode.get("value"));
+            return EnhancedDocument.fromAttributeValueMap(item.item()).toJson();
         }
     }
 }

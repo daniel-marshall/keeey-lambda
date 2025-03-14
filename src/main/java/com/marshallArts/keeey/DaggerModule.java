@@ -27,11 +27,9 @@ public class DaggerModule {
 
     @Provides
     final GetHandler getHandler(
-            final ObjectMapper objectMapper,
             final DynamoDbClient dynamoClient,
             @Named("DYNAMO_TABLE_NAME") final String tableName) {
         return new GetHandler(
-                objectMapper,
                 dynamoClient,
                 tableName
         );
