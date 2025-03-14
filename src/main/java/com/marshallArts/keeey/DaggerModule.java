@@ -4,11 +4,15 @@ import javax.inject.Named;
 
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
+import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.json.JsonMapper;
 import com.marshallArts.keeey.LambdaActual.GetHandler;
 import com.marshallArts.keeey.LambdaActual.PutHandler;
 import dagger.Provides;
-import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
+
+import static com.fasterxml.jackson.core.json.JsonReadFeature.ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER;
 
 @dagger.Module
 public class DaggerModule {
@@ -27,9 +31,11 @@ public class DaggerModule {
 
     @Provides
     final GetHandler getHandler(
+            final ObjectMapper objectMapper,
             final DynamoDbClient dynamoClient,
             @Named("DYNAMO_TABLE_NAME") final String tableName) {
         return new GetHandler(
+                objectMapper,
                 dynamoClient,
                 tableName
         );
@@ -47,7 +53,9 @@ public class DaggerModule {
 
     @Provides
     final ObjectMapper objectMapper() {
-        return new ObjectMapper();
+        return JsonMapper.builder()
+                .enable(ALLOW_BACKSLASH_ESCAPING_ANY_CHARACTER)
+                .build();
     }
 
     @Provides

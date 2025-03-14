@@ -1,6 +1,5 @@
 package com.marshallArts.keeey;
 
-import javax.inject.Inject;
 import javax.inject.Named;
 import java.util.Map;
 
@@ -60,8 +59,7 @@ public final class LambdaActual implements RequestHandler<APIGatewayV2HTTPEvent,
         public String handle(
                 final PutEvent event,
                 final APIGatewayV2HTTPEvent rawEvent,
-                final Context context)
-                throws Exception {
+                final Context context) {
             dynamoClient.putItem(PutItemRequest.builder()
                     .tableName(tableName)
                     .item(Map.of(
@@ -79,6 +77,8 @@ public final class LambdaActual implements RequestHandler<APIGatewayV2HTTPEvent,
 
     @AllArgsConstructor
     public static final class GetHandler implements HandlerDelegate<GetEvent> {
+
+        private final ObjectMapper objectMapper;
 
         private final DynamoDbClient dynamoClient;
 
@@ -99,7 +99,12 @@ public final class LambdaActual implements RequestHandler<APIGatewayV2HTTPEvent,
                     .build()
             );
 
-            return EnhancedDocument.fromAttributeValueMap(item.item()).toJson();
+            final ObjectNode jsonNode = objectMapper.readValue(
+                    EnhancedDocument.fromAttributeValueMap(item.item()).toJson(),
+                    ObjectNode.class
+            );
+
+            return objectMapper.writeValueAsString(jsonNode.get("value"));
         }
     }
 }
