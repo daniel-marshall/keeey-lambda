@@ -6,12 +6,14 @@ import com.amazonaws.services.lambda.runtime.Context;
 import com.amazonaws.services.lambda.runtime.RequestHandler;
 import com.amazonaws.services.lambda.runtime.api.client.AWSLambda;
 import com.amazonaws.services.lambda.runtime.events.APIGatewayV2HTTPEvent;
-import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import lombok.SneakyThrows;
 import software.amazon.awssdk.enhanced.dynamodb.document.EnhancedDocument;
 import software.amazon.awssdk.services.dynamodb.DynamoDbClient;
 import software.amazon.awssdk.services.dynamodb.model.AttributeValue;
+import software.amazon.awssdk.services.dynamodb.model.GetItemRequest;
+import software.amazon.awssdk.services.dynamodb.model.GetItemResponse;
 import software.amazon.awssdk.services.dynamodb.model.PutItemRequest;
 
 public class LambdaMain {
@@ -61,8 +63,21 @@ public class LambdaMain {
             return "Success";
         }
 
+        @SneakyThrows
         private String handleGetRequest(final GetEvent getEvent, final APIGatewayV2HTTPEvent event, final Context context) {
-            return "123";
+            final GetItemResponse item = DYNAMO_CLIENT.getItem(GetItemRequest.builder()
+                    .tableName(DYNAMO_TABLE_NAME)
+                    .key(Map.of(
+                            "key", AttributeValue.builder().s(getEvent.key()).build()
+                    ))
+                    .build()
+            );
+            final ObjectNode jsonNode = OBJECT_MAPPER.readValue(
+                    EnhancedDocument.fromAttributeValueMap(item.item()).toJson(),
+                    ObjectNode.class
+            );
+
+            return OBJECT_MAPPER.writeValueAsString(jsonNode.get("value"));
         }
     }
 }
